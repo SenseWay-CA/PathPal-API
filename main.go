@@ -35,7 +35,8 @@ func main() {
 	// Add the new user registration route
 	e.POST("/register", registerUser)
 
-	// TODO: Add login route next
+	// Add login route
+	e.POST("/login", loginUser)
 
 	// Start the server
 	e.Logger.Fatal(e.Start(":1323"))
