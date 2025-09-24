@@ -1,5 +1,10 @@
 version: '3.8'
 
+# This new top-level key defines our custom network
+networks:
+  pathpal-net:
+    driver: bridge
+
 services:
   # Your Go API Service
   api:
@@ -10,20 +15,24 @@ services:
     depends_on:
       - db
     environment:
-      # This value will be provided by Dokploy's secret management
       - DATABASE_URL=${DATABASE_URL}
+    # This line tells the API service to join our custom network
+    networks:
+      - pathpal-net
 
   # PostgreSQL Database Service
   db:
     image: postgres:15-alpine
     restart: always
     environment:
-      # These values will be provided by Dokploy's secret management
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # This line tells the DB service to join our custom network
+    networks:
+      - pathpal-net
 
 volumes:
   postgres_data:
