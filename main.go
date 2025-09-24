@@ -13,7 +13,7 @@ func main() {
 	if err := ConnectDB(); err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
-	defer DB.Close() // Close the connection pool when the application exits
+	defer DB.Close()
 
 	// Create a new Echo instance
 	e := echo.New()
@@ -21,13 +21,21 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// CORS middleware to allow requests from your Vue frontend
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"}, // For development. For production, restrict this to your frontend's domain.
+		AllowMethods: []string{http.MethodGet, http.MethodPost},
+	}))
 
-	// Simple route for testing
+	// --- API Routes ---
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, SenseWay API is running!")
 	})
 
-	// TODO: We will add registration and login routes here in the next step
+	// Add the new user registration route
+	e.POST("/register", registerUser)
+
+	// TODO: Add login route next
 
 	// Start the server
 	e.Logger.Fatal(e.Start(":1323"))
