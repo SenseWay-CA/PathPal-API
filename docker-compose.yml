@@ -3,27 +3,27 @@ version: '3.8'
 services:
   # Your Go API Service
   api:
-    build: . # Tells Dokploy to build the image from the Dockerfile in the current directory
+    build: .
     restart: always
     ports:
-      - "1323:1323" # Maps port 1323 on the host to port 1323 in the container
+      - "1323:1323"
     depends_on:
-      - db # Ensures the database starts before the API
+      - db
     environment:
-      # You will need to add your database connection details here
-      # These should be managed as secrets in Dokploy for production
-      - DATABASE_URL=postgres://user:password@db:5432/pathpaldb?sslmode=disable
+      # This value will be provided by Dokploy's secret management
+      - DATABASE_URL=${DATABASE_URL}
 
   # PostgreSQL Database Service
   db:
-    image: postgres:15-alpine # Use an official PostgreSQL image
+    image: postgres:15-alpine
     restart: always
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=pathpaldb
+      # These values will be provided by Dokploy's secret management
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Persists database data
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:
