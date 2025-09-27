@@ -72,7 +72,7 @@ func registerUser(c echo.Context) error {
 	cookie.Path = "/"
 	cookie.HttpOnly = true
 	cookie.Secure = true
-	cookie.SameSite = http.SameSiteLaxMode
+	cookie.SameSite = http.SameSiteNoneMode
 	c.SetCookie(cookie)
 
 	// 7. Return the new user object
@@ -116,9 +116,9 @@ func loginUser(c echo.Context) error {
 	cookie.Value = sessionToken
 	cookie.Expires = expiresAt
 	cookie.Path = "/"
-	cookie.HttpOnly = true                 // Prevent JavaScript access
-	cookie.Secure = true                   // Only send over HTTPS
-	cookie.SameSite = http.SameSiteLaxMode // CSRF protection
+	cookie.HttpOnly = true                  // Prevent JavaScript access
+	cookie.Secure = true                    // Only send over HTTPS
+	cookie.SameSite = http.SameSiteNoneMode // CSRF protection
 
 	c.SetCookie(cookie)
 
@@ -143,7 +143,7 @@ func logoutUser(c echo.Context) error {
 	expireCookie.Path = "/"
 	expireCookie.HttpOnly = true
 	expireCookie.Secure = true
-	expireCookie.SameSite = http.SameSiteLaxMode
+	expireCookie.SameSite = http.SameSiteNoneMode
 	c.SetCookie(expireCookie)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out"})
