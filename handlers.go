@@ -12,19 +12,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// RegisterRequest defines the structure for a user registration request
 type RegisterRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// LoginRequest defines the structure for a user login request
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// registerUser is the handler for the POST /register endpoint
 func registerUser(c echo.Context) error {
 	// 1. Bind and validate the request
 	req := new(RegisterRequest)

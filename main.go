@@ -9,22 +9,17 @@ import (
 )
 
 func main() {
-	// Connect to the database
 	if err := ConnectDB(); err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
 	defer DB.Close()
 
-	// Create a new Echo instance
 	e := echo.New()
 
-	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// CORRECTED CORS CONFIGURATION
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		// Provide specific, trusted origins instead of a wildcard
 		AllowOrigins:     []string{"https://senseway.ca", "http://localhost:5173"},
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
@@ -44,6 +39,5 @@ func main() {
 	// --- Example Protected Route ---
 	e.GET("/api/user-profile", checkAuth)
 
-	// Start the server
 	e.Logger.Fatal(e.Start(":1323"))
 }
