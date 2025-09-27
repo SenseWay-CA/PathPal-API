@@ -16,7 +16,6 @@ services:
       - db
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
     # This line tells the API service to join our custom network
     networks:
       - pathpal-net

@@ -9,35 +9,33 @@ import (
 )
 
 func main() {
-	// Connect to the database
 	if err := ConnectDB(); err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
 	defer DB.Close()
 
-	// Create a new Echo instance
 	e := echo.New()
 
-	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	// CORS middleware to allow requests from your Vue frontend
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"}, // For development. For production, restrict this to your frontend's domain.
-		AllowMethods: []string{http.MethodGet, http.MethodPost},
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost},
+		AllowCredentials: true,
 	}))
 
 	// --- API Routes ---
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, SenseWay API is running!")
+		return c.String(http.StatusOK, "PathPal API is running!")
 	})
 
-	// Add the new user registration route
 	e.POST("/register", registerUser)
-
-	// Add login route
 	e.POST("/login", loginUser)
+	e.POST("/logout", logoutUser)
+	e.GET("/check-auth", checkAuth)
 
-	// Start the server
+	// --- Example Protected Route ---
+	e.GET("/api/user-profile", checkAuth) // Reuse checkAuth as a simple middleware
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
