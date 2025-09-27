@@ -22,9 +22,10 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Updated CORS middleware to allow necessary headers
+	// CORRECTED CORS CONFIGURATION
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"*"}, // Changed for easier testing
+		// Provide specific, trusted origins instead of a wildcard
+		AllowOrigins:     []string{"https://senseway.ca", "http://localhost:5173"},
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
