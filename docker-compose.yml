@@ -1,12 +1,8 @@
-version: '3.8'
-
-# This new top-level key defines our custom network
 networks:
   pathpal-net:
     driver: bridge
 
 services:
-  # Your Go API Service
   api:
     build: .
     restart: always
@@ -16,11 +12,9 @@ services:
       - db
     environment:
       - DATABASE_URL=${DATABASE_URL}
-    # This line tells the API service to join our custom network
     networks:
       - pathpal-net
 
-  # PostgreSQL Database Service
   db:
     image: postgres:18-alpine
     restart: always
@@ -30,7 +24,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # This line tells the DB service to join our custom network
     networks:
       - pathpal-net
 
