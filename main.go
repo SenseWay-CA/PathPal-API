@@ -21,7 +21,7 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"https://senseway.ca", "http://localhost:5173"},
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodOptions},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
@@ -29,6 +29,13 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "PathPal API is running!")
 	})
+
+	// Auth Routes
+
+	e.POST("/register", registerUser)
+	e.POST("/login", loginUser)
+	e.GET("/session", getSession)
+	e.DELETE("/session", logoutUser)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
