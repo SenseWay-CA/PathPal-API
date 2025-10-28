@@ -8,10 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DB is a global variable to hold the database connection pool
 var DB *pgxpool.Pool
 
-// ConnectDB initializes the database connection pool
 func ConnectDB() error {
 	var err error
 	dbUrl := os.Getenv("DATABASE_URL")
@@ -24,7 +22,6 @@ func ConnectDB() error {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	// Ping the database to verify the connection
 	if err := DB.Ping(context.Background()); err != nil {
 		return fmt.Errorf("unable to ping database: %w", err)
 	}
