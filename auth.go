@@ -240,7 +240,7 @@ func setSessionCookie(c echo.Context, token string, expires time.Time) {
 	cookie.Name = sessionCookieName
 	cookie.Value = token
 	cookie.Expires = expires
-	cookie.HttpOnly = false
+	cookie.HttpOnly = true
 	cookie.Path = "/"
 	cookie.Secure = true
 	cookie.SameSite = http.SameSiteLaxMode
@@ -252,7 +252,7 @@ func clearSessionCookie(c echo.Context) {
 	cookie.Name = sessionCookieName
 	cookie.Value = ""
 	cookie.Expires = time.Unix(0, 0)
-	cookie.HttpOnly = false
+	cookie.HttpOnly = true
 	cookie.Path = "/"
 	cookie.Secure = true
 	cookie.SameSite = http.SameSiteLaxMode
