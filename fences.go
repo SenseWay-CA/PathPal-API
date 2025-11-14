@@ -86,13 +86,15 @@ func createFence(c echo.Context) error {
 }
 
 func listFences(c echo.Context) error {
-	var req ListFencesRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid request payload"})
-	}
-	userID := strings.TrimSpace(req.UserID)
+	userID := strings.TrimSpace(c.QueryParam("user_id"))
 	if userID == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user id is required"})
+		var req ListFencesRequest
+		if err := c.Bind(&req); err == nil {
+			userID = strings.TrimSpace(req.UserID)
+		}
+	}
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user id is required (use ?user_id=... or JSON body)"})
 	}
 
 	ctx := c.Request().Context()

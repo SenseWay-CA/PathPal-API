@@ -9,6 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const iso8601Format = time.RFC3339
+
 type LocationResponse struct {
 	ID        int       `json:"id"`
 	Longitude float64   `json:"longitude"`
@@ -100,17 +102,17 @@ func getLocationByTime(c echo.Context) error {
 	}
 
 	// Parse time strings
-	start, err := time.Parse(time.RFC3339, req.StartTime)
+	start, err := time.Parse(iso8601Format, req.StartTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid start_time format, use RFC3339 (e.g., 2025-11-14T00:00:00Z)",
+			"error": "invalid start_time format, please use ISO 8601 format (e.g., 2025-11-14T00:00:00Z)",
 		})
 	}
 
-	end, err := time.Parse(time.RFC3339, req.EndTime)
+	end, err := time.Parse(iso8601Format, req.EndTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid end_time format, use RFC3339 (e.g., 2025-11-14T23:59:59Z)",
+			"error": "invalid end_time format, please use ISO 8601 format (e.g., 2025-11-14T23:59:59Z)",
 		})
 	}
 
@@ -289,17 +291,17 @@ func getHeartRateByTime(c echo.Context) error {
 	}
 
 	// Parse time strings
-	start, err := time.Parse(time.RFC3339, req.StartTime)
+	start, err := time.Parse(iso8601Format, req.StartTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid start_time format, use RFC3339 (e.g., 2025-11-14T00:00:00Z)",
+			"error": "invalid start_time format, please use ISO 8601 format (e.g., 2025-11-14T00:00:00Z)",
 		})
 	}
 
-	end, err := time.Parse(time.RFC3339, req.EndTime)
+	end, err := time.Parse(iso8601Format, req.EndTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid end_time format, use RFC3339 (e.g., 2025-11-14T23:59:59Z)",
+			"error": "invalid end_time format, please use ISO 8601 format (e.g., 2025-11-14T23:59:59Z)",
 		})
 	}
 
