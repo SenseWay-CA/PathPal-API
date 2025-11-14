@@ -30,6 +30,7 @@ func main() {
 	})
 
 	// ROUTES
+
 	// Auth Routes
 	e.POST("/register", registerUser)
 	e.POST("/login", loginUser)
