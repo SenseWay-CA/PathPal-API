@@ -24,6 +24,11 @@ type EventCreateRequest struct {
 	Description string `json:"description"`
 }
 
+type GetEventsRequest struct {
+	UserID  string `json:"user_id"`
+	Quanity int    `json:"quantity"`
+}
+
 func createEvent(c echo.Context) error {
 	var req EventCreateRequest
 
@@ -52,4 +57,41 @@ func createEvent(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, newEvent)
+}
+
+func getEvents(c echo.Context) error {
+	var req GetEventsRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request format"})
+	}
+
+	sql := `
+		SELECT id, user_id, type, name, description, created_at
+		FROM Events
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`
+	rows, err := DB.Query(context.Background(), sql, req.UserID, req.Quanity)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to retrieve events"})
+	}
+	defer rows.Close()
+
+	var events []Event
+	for rows.Next() {
+		var event Event
+		if err := rows.Scan(&event.EventID, &event.UserID, &event.Type, &event.Name, &event.Description, &event.CreatedAt); err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to scan event"})
+		}
+		events = append(events, event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Error iterating over events"})
+	}
+
+	return c.JSON(http.StatusOK, events)
 }
