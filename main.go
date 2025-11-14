@@ -20,8 +20,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"https://senseway.ca", "http://localhost:5173"},
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		AllowOrigins:     []string{"https://senseway.ca", "http://localhost:5173", "*"},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
@@ -36,6 +35,9 @@ func main() {
 	e.POST("/login", loginUser)
 	e.GET("/session", getSession)
 	e.DELETE("/session", logoutUser)
+
+	// Events Routes
+	e.POST("/events", createEvent)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
