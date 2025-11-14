@@ -43,6 +43,7 @@ type UpdateFenceRequest struct {
 
 type ListFencesRequest struct {
 	UserID string `json:"user_id"`
+	ID     *int   `json:"id"`
 }
 
 func createFence(c echo.Context) error {
@@ -87,20 +88,47 @@ func createFence(c echo.Context) error {
 
 func listFences(c echo.Context) error {
 	userID := strings.TrimSpace(c.QueryParam("user_id"))
+	var body ListFencesRequest
 	if userID == "" {
-		var req ListFencesRequest
-		if err := c.Bind(&req); err == nil {
-			userID = strings.TrimSpace(req.UserID)
+		if err := c.Bind(&body); err == nil {
+			userID = strings.TrimSpace(body.UserID)
 		}
 	}
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user id is required (use ?user_id=... or JSON body)"})
 	}
 
-	ctx := c.Request().Context()
-	sql := `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 ORDER BY created_at DESC`
+	// Optional id filter from query or body
+	var idFilter *int
+	if idStr := strings.TrimSpace(c.QueryParam("id")); idStr != "" {
+		parsed, err := strconv.Atoi(idStr)
+		if err != nil || parsed <= 0 {
+			return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid id"})
+		}
+		idFilter = &parsed
+	} else if body.ID == nil {
+		if err := c.Bind(&body); err == nil && body.ID != nil {
+			if *body.ID <= 0 {
+				return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid id"})
+			}
+			idFilter = body.ID
+		}
+	} else {
+		if *body.ID <= 0 {
+			return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid id"})
+		}
+		idFilter = body.ID
+	}
 
-	rows, err := DB.Query(ctx, sql, userID)
+	ctx := c.Request().Context()
+	baseSQL := `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1`
+	var rows pgx.Rows
+	var err error
+	if idFilter != nil {
+		rows, err = DB.Query(ctx, baseSQL+" AND id = $2 ORDER BY created_at DESC", userID, *idFilter)
+	} else {
+		rows, err = DB.Query(ctx, baseSQL+" ORDER BY created_at DESC", userID)
+	}
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "failed to fetch fences"})
 	}
