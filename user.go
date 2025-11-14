@@ -23,6 +23,16 @@ type UserGET struct {
 	CreatedAt time.Time `json:"created_at"`
 	Password  string    `json:"password"`
 }
+type UserPUT struct {
+	UserID    string    `json:"user_id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	BirthDate time.Time `json:"birth_date"`
+	HomeLong  float64   `json:"home_long"`
+	HomeLat   float64   `json:"home_lat"`
+	Password  string    `json:"password"`
+}
 
 func getUser(c echo.Context) error {
 	var req UserGET
@@ -104,7 +114,7 @@ func deleteUser(c echo.Context) error {
 }
 
 func putUser(c echo.Context) error {
-	var req UserGET
+	var req UserPUT
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"error": "Invalid request",
