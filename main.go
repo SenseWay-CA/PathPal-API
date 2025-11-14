@@ -29,8 +29,8 @@ func main() {
 		return c.String(http.StatusOK, "PathPal API is running!")
 	})
 
+	// ROUTES
 	// Auth Routes
-
 	e.POST("/register", registerUser)
 	e.POST("/login", loginUser)
 	e.GET("/session", getSession)
@@ -41,9 +41,9 @@ func main() {
 	e.GET("/events", getEvents)
 
 	// Fence Routes
-	e.GET("/users/:userID/fences", listFences)
-	e.POST("/users/:userID/fences", createFence)
-	e.PUT("/users/:userID/fences/:fenceID", updateFence)
-	e.DELETE("/users/:userID/fences/:fenceID", deleteFence)
+	e.GET("/fences", listFences)
+	e.POST("/fences", createFence)
+	e.PUT("/fences", updateFence)
+	e.DELETE("/fences", deleteFence)
 	e.Logger.Fatal(e.Start(":1323"))
 }
