@@ -256,20 +256,20 @@ func parseFenceID(value string) (int, error) {
 func (r *CreateFenceRequest) Validate() error {
 	r.UserID = strings.TrimSpace(r.UserID)
 	if r.UserID == "" {
-		return errors.New("user_id is required!")
+		return errors.New("user_id is required")
 	}
 	r.Name = strings.TrimSpace(r.Name)
 	if r.Name == "" {
-		return errors.New("name is required!")
+		return errors.New("name is required")
 	}
 	if !isValidLongitude(r.Longitude) {
-		return errors.New("longitude must be between -180 and 180!")
+		return errors.New("longitude must be between -180 and 180")
 	}
 	if !isValidLatitude(r.Latitude) {
-		return errors.New("latitude must be between -90 and 90!")
+		return errors.New("latitude must be between -90 and 90")
 	}
 	if r.Radius <= 0 {
-		return errors.New("radius must be greater than zero!")
+		return errors.New("radius must be greater than zero")
 	}
 	return nil
 }
@@ -277,7 +277,7 @@ func (r *CreateFenceRequest) Validate() error {
 func (r *UpdateFenceRequest) Validate() error {
 	r.UserID = strings.TrimSpace(r.UserID)
 	if r.UserID == "" {
-		return errors.New("user_id is required!")
+		return errors.New("user_id is required")
 	}
 	if r.Name == nil && r.Enabled == nil && r.Longitude == nil && r.Latitude == nil && r.Radius == nil {
 		return errors.New("at least one field must be provided")
@@ -286,18 +286,18 @@ func (r *UpdateFenceRequest) Validate() error {
 	if r.Name != nil {
 		trimmed := strings.TrimSpace(*r.Name)
 		if trimmed == "" {
-			return errors.New("name cannot be empty!")
+			return errors.New("name cannot be empty")
 		}
 		*r.Name = trimmed
 	}
 	if r.Longitude != nil && !isValidLongitude(*r.Longitude) {
-		return errors.New("longitude must be between -180 and 180!")
+		return errors.New("longitude must be between -180 and 180")
 	}
 	if r.Latitude != nil && !isValidLatitude(*r.Latitude) {
-		return errors.New("latitude must be between -90 and 90!")
+		return errors.New("latitude must be between -90 and 90")
 	}
 	if r.Radius != nil && *r.Radius <= 0 {
-		return errors.New("radius must be greater than zero!")
+		return errors.New("radius must be greater than zero")
 	}
 
 	return nil
