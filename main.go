@@ -61,7 +61,7 @@ func main() {
 	// Stats Routes
 	e.GET("/location", getLocation)
 	e.GET("/locationByTime", getLocationByTime)
-	e.GET("/lattery", getBattery)
+	e.GET("/battery", getBattery)
 	e.GET("/heartRate", getHeartRate)
 	e.GET("/heartRateByTime", getHeartRateByTime)
 	e.POST("/status", postStatus)
