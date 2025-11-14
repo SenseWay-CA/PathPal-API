@@ -59,12 +59,12 @@ func main() {
 	e.DELETE("/user", deleteUser)
 
 	// Stats Routes
-	e.GET("/Location", getLocation)
-	e.GET("/LocationByTime", getLocationByTime)
-	e.GET("/Battery", getBattery)
-	e.GET("/HeartRate", getHeartRate)
-	e.GET("/HeartRateByTime", getHeartRateByTime)
-	e.POST("/Status", postStatus)
+	e.GET("/location", getLocation)
+	e.GET("/locationByTime", getLocationByTime)
+	e.GET("/lattery", getBattery)
+	e.GET("/heartRate", getHeartRate)
+	e.GET("/heartRateByTime", getHeartRateByTime)
+	e.POST("/status", postStatus)
 
 	// Guardian Routes
 	e.POST("/guardians", createGuardian)
