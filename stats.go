@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -17,20 +16,27 @@ type LocationResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// GET /Location - Get recent locations for a user
-// Query params: user_id (required), quantity (required)
-func getLocation(c echo.Context) error {
-	userID := c.QueryParam("user_id")
-	quantityStr := c.QueryParam("quantity")
+type GetLocationRequest struct {
+	UserID   string `json:"user_id"`
+	Quantity int    `json:"quantity"`
+}
 
-	if userID == "" || quantityStr == "" {
+// GET /Location - Get recent locations for a user
+func getLocation(c echo.Context) error {
+	var req GetLocationRequest
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "user_id and quantity are required",
+			"error": "invalid request body",
 		})
 	}
 
-	qty, err := strconv.Atoi(quantityStr)
-	if err != nil || qty <= 0 {
+	if req.UserID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "user_id is required",
+		})
+	}
+
+	if req.Quantity <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "quantity must be a positive integer",
 		})
@@ -44,7 +50,7 @@ func getLocation(c echo.Context) error {
 		LIMIT $2
 	`
 
-	rows, err := DB.Query(context.Background(), query, userID, qty)
+	rows, err := DB.Query(context.Background(), query, req.UserID, req.Quantity)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to fetch locations",
@@ -72,28 +78,36 @@ func getLocation(c echo.Context) error {
 	return c.JSON(http.StatusOK, locations)
 }
 
-// GET /LocationByTime - Get locations for a user within a time range
-// Query params: user_id (required), start_time (required), end_time (required)
-func getLocationByTime(c echo.Context) error {
-	userID := c.QueryParam("user_id")
-	startTime := c.QueryParam("start_time")
-	endTime := c.QueryParam("end_time")
+type GetByTimeRequest struct {
+	UserID    string `json:"user_id"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+}
 
-	if userID == "" || startTime == "" || endTime == "" {
+// GET /LocationByTime - Get locations for a user within a time range
+func getLocationByTime(c echo.Context) error {
+	var req GetByTimeRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid request body",
+		})
+	}
+
+	if req.UserID == "" || req.StartTime == "" || req.EndTime == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "user_id, start_time, and end_time are required",
 		})
 	}
 
 	// Parse time strings
-	start, err := time.Parse(time.RFC3339, startTime)
+	start, err := time.Parse(time.RFC3339, req.StartTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid start_time format, use RFC3339 (e.g., 2025-11-14T00:00:00Z)",
 		})
 	}
 
-	end, err := time.Parse(time.RFC3339, endTime)
+	end, err := time.Parse(time.RFC3339, req.EndTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid end_time format, use RFC3339 (e.g., 2025-11-14T23:59:59Z)",
@@ -115,7 +129,7 @@ func getLocationByTime(c echo.Context) error {
 		ORDER BY created_at DESC
 	`
 
-	rows, err := DB.Query(context.Background(), query, userID, start, end)
+	rows, err := DB.Query(context.Background(), query, req.UserID, start, end)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to fetch locations",
@@ -149,12 +163,18 @@ type BatteryResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// GET /Battery - Get the most recent battery record for a user
-// Query params: user_id (required)
-func getBattery(c echo.Context) error {
-	userID := c.QueryParam("user_id")
+type GetBatteryRequest struct {
+	UserID string `json:"user_id"`
+}
 
-	if userID == "" {
+// GET /Battery - Get the most recent battery record for a user
+func getBattery(c echo.Context) error {
+	var req GetBatteryRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.UserID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "user_id is required",
 		})
@@ -169,7 +189,7 @@ func getBattery(c echo.Context) error {
 	`
 
 	var batteryRecord BatteryResponse
-	err := DB.QueryRow(context.Background(), query, userID).Scan(
+	err := DB.QueryRow(context.Background(), query, req.UserID).Scan(
 		&batteryRecord.ID,
 		&batteryRecord.Battery,
 		&batteryRecord.CreatedAt,
@@ -195,20 +215,25 @@ type HeartRateResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// GET /HeartRate - Get recent heart rate records for a user
-// Query params: user_id (required), quantity (required)
-func getHeartRate(c echo.Context) error {
-	userID := c.QueryParam("user_id")
-	quantityStr := c.QueryParam("quantity")
+type GetHeartRateRequest struct {
+	UserID   string `json:"user_id"`
+	Quantity int    `json:"quantity"`
+}
 
-	if userID == "" || quantityStr == "" {
+// GET /HeartRate - Get recent heart rate records for a user
+func getHeartRate(c echo.Context) error {
+	var req GetHeartRateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.UserID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "user_id and quantity are required",
+			"error": "user_id is required",
 		})
 	}
 
-	qty, err := strconv.Atoi(quantityStr)
-	if err != nil || qty <= 0 {
+	if req.Quantity <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "quantity must be a positive integer",
 		})
@@ -222,7 +247,7 @@ func getHeartRate(c echo.Context) error {
 		LIMIT $2
 	`
 
-	rows, err := DB.Query(context.Background(), query, userID, qty)
+	rows, err := DB.Query(context.Background(), query, req.UserID, req.Quantity)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to fetch heart rate data",
@@ -251,27 +276,27 @@ func getHeartRate(c echo.Context) error {
 }
 
 // GET /HeartRateByTime - Get heart rate records for a user within a time range
-// Query params: user_id (required), start_time (required), end_time (required)
 func getHeartRateByTime(c echo.Context) error {
-	userID := c.QueryParam("user_id")
-	startTime := c.QueryParam("start_time")
-	endTime := c.QueryParam("end_time")
+	var req GetByTimeRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
 
-	if userID == "" || startTime == "" || endTime == "" {
+	if req.UserID == "" || req.StartTime == "" || req.EndTime == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "user_id, start_time, and end_time are required",
 		})
 	}
 
 	// Parse time strings
-	start, err := time.Parse(time.RFC3339, startTime)
+	start, err := time.Parse(time.RFC3339, req.StartTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid start_time format, use RFC3339 (e.g., 2025-11-14T00:00:00Z)",
 		})
 	}
 
-	end, err := time.Parse(time.RFC3339, endTime)
+	end, err := time.Parse(time.RFC3339, req.EndTime)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid end_time format, use RFC3339 (e.g., 2025-11-14T23:59:59Z)",
@@ -293,7 +318,7 @@ func getHeartRateByTime(c echo.Context) error {
 		ORDER BY created_at DESC
 	`
 
-	rows, err := DB.Query(context.Background(), query, userID, start, end)
+	rows, err := DB.Query(context.Background(), query, req.UserID, start, end)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to fetch heart rate data",
