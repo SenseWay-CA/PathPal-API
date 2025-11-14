@@ -34,7 +34,7 @@ func createEvent(c echo.Context) error {
 	sql := `
 		INSERT INTO Events (user_id, type, name, description)
 		VALUES ($1, $2, $3, $4) 
-		RETURNING event_id, user_id, type, name, description, created_at
+		RETURNING id, user_id, type, name, description, created_at
 	`
 
 	var newEvent Event
