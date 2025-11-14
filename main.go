@@ -40,7 +40,7 @@ func main() {
 	// Events Routes
 	e.POST("/events", createEvent)
 	e.GET("/events", getEvents)
-	e.GET("/EventsByType", getEventsByType)
+	e.GET("/eventsByType", getEventsByType)
 
 	// Invite Routes
 	e.POST("/invites", createInvite)
