@@ -42,9 +42,9 @@ func main() {
 	e.GET("/events", getEvents)
 
 	// Fence Routes
-	e.GET("/fences", listFences)
-	e.POST("/fences", createFence)
-	e.PUT("/fences", updateFence)
-	e.DELETE("/fences", deleteFence)
+	// e.GET("/fences", listFences)
+	// e.POST("/fences", createFence)
+	// e.PUT("/fences", updateFence)
+	// e.DELETE("/fences", deleteFence)
 	e.Logger.Fatal(e.Start(":1323"))
 }
