@@ -40,11 +40,37 @@ func main() {
 	// Events Routes
 	e.POST("/events", createEvent)
 	e.GET("/events", getEvents)
+	e.GET("/EventsByType", getEventsByType)
+
+	// Invite Routes
+	e.POST("/invites", createInvite)
+	e.GET("/invites/:code", getInvite)
+	e.DELETE("/invites", deleteInvite)
 
 	// Fence Routes
-	// e.GET("/fences", listFences)
-	// e.POST("/fences", createFence)
-	// e.PUT("/fences", updateFence)
-	// e.DELETE("/fences", deleteFence)
+	e.GET("/fences", listFences)
+	e.POST("/fences", createFence)
+	e.PUT("/fences", updateFence)
+	e.DELETE("/fences", deleteFence)
+
+	//User Routes
+	e.GET("/user", getUser)
+	e.PUT("/user", putUser)
+	e.DELETE("/user", deleteUser)
+
+	// Stats Routes
+	e.GET("/Location", getLocation)
+	e.GET("/LocationByTime", getLocationByTime)
+	e.GET("/Battery", getBattery)
+	e.GET("/HeartRate", getHeartRate)
+	e.GET("/HeartRateByTime", getHeartRateByTime)
+	e.POST("/Status", postStatus)
+
+	// Guardian Routes
+	e.POST("/guardians", createGuardian)
+	e.DELETE("/guardians", deleteGuardian)
+	e.GET("/caregivers", getCaregivers)
+	e.GET("/caneusers", getCaneUsers)
+
 	e.Logger.Fatal(e.Start(":1323"))
 }

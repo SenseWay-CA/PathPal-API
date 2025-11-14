@@ -29,6 +29,19 @@ type GetEventsRequest struct {
 	Quanity int    `json:"quantity"`
 }
 
+type GetEventsByTypeRequest struct {
+	UserID   string `json:"user_id"`
+	Quantity int    `json:"quantity"`
+	Type     string `json:"type"`
+}
+
+type EventResponse struct {
+	EventID     int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 func createEvent(c echo.Context) error {
 	var req EventCreateRequest
 
@@ -84,6 +97,43 @@ func getEvents(c echo.Context) error {
 	for rows.Next() {
 		var event Event
 		if err := rows.Scan(&event.EventID, &event.UserID, &event.Type, &event.Name, &event.Description, &event.CreatedAt); err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to scan event"})
+		}
+		events = append(events, event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Error iterating over events"})
+	}
+
+	return c.JSON(http.StatusOK, events)
+}
+
+func getEventsByType(c echo.Context) error {
+	var req GetEventsByTypeRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request format"})
+	}
+
+	sql := `
+		SELECT id, name, description, created_at
+		FROM Events
+		WHERE user_id = $1 AND type = $2
+		ORDER BY created_at DESC
+		LIMIT $3
+	`
+	rows, err := DB.Query(context.Background(), sql, req.UserID, req.Type, req.Quantity)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to retrieve events"})
+	}
+	defer rows.Close()
+
+	var events []EventResponse
+	for rows.Next() {
+		var event EventResponse
+		if err := rows.Scan(&event.EventID, &event.Name, &event.Description, &event.CreatedAt); err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to scan event"})
 		}
 		events = append(events, event)
