@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -25,8 +26,8 @@ type EventCreateRequest struct {
 }
 
 type GetEventsRequest struct {
-	UserID  string `json:"user_id"`
-	Quanity int    `json:"quantity"`
+	UserID   string `json:"user_id"`
+	Quantity int    `json:"quantity"`
 }
 
 type GetEventsByTypeRequest struct {
@@ -73,10 +74,14 @@ func createEvent(c echo.Context) error {
 }
 
 func getEvents(c echo.Context) error {
-	var req GetEventsRequest
-
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request format"})
+	userID := c.QueryParam("user_id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user_id query parameter is required"})
+	}
+	quantityStr := c.QueryParam("quantity")
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil || quantity <= 0 {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "valid quantity query parameter is required"})
 	}
 
 	sql := `
@@ -86,7 +91,7 @@ func getEvents(c echo.Context) error {
 		ORDER BY created_at DESC
 		LIMIT $2
 	`
-	rows, err := DB.Query(context.Background(), sql, req.UserID, req.Quanity)
+	rows, err := DB.Query(context.Background(), sql, userID, quantity)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to retrieve events"})
