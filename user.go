@@ -35,9 +35,9 @@ type UserPUT struct {
 }
 
 func getUser(c echo.Context) error {
-	var req UserGET
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request"})
+	userID := c.QueryParam("user_id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user_id query parameter is required"})
 	}
 
 	query := `
@@ -46,7 +46,7 @@ func getUser(c echo.Context) error {
 		WHERE user_id = $1`
 
 	var user UserGET
-	err := DB.QueryRow(context.Background(), query, req.UserID).
+	err := DB.QueryRow(context.Background(), query, userID).
 		Scan(
 			&user.UserID,
 			&user.Email,
