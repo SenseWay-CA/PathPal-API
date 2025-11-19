@@ -64,6 +64,7 @@ func main() {
 	e.GET("/battery", getBattery)
 	e.GET("/heartRate", getHeartRate)
 	e.GET("/heartRateByTime", getHeartRateByTime)
+	e.GET("/status", getStatus)
 	e.POST("/status", postStatus)
 
 	// Guardian Routes

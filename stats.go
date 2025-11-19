@@ -412,3 +412,45 @@ func postStatus(c echo.Context) error {
 		"message": "status created successfully",
 	})
 }
+
+type FullStatusResponse struct {
+	ID        int       `json:"id"`
+	UserID    string    `json:"user_id"`
+	Longitude float64   `json:"longitude"`
+	Latitude  float64   `json:"latitude"`
+	Battery   int       `json:"battery"`
+	HeartRate *int      `json:"heart_rate"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func getStatus(c echo.Context) error {
+	userID := c.QueryParam("user_id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "user_id query parameter is required"})
+	}
+
+	query := `
+		SELECT id, user_id, longitude, latitude, battery, heart_rate, created_at
+		FROM stats
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	var status FullStatusResponse
+	err := DB.QueryRow(context.Background(), query, userID).Scan(
+		&status.ID,
+		&status.UserID,
+		&status.Longitude,
+		&status.Latitude,
+		&status.Battery,
+		&status.HeartRate,
+		&status.CreatedAt,
+	)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to fetch status"})
+	}
+
+	return c.JSON(http.StatusOK, status)
+}
