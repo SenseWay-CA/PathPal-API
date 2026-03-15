@@ -42,8 +42,8 @@ type UpdateFenceRequest struct {
 }
 
 type ListFencesRequest struct {
-	UserID string `json:"user_id"`
-	ID     *int   `json:"id"`
+	UserID string `json:"user_id" query:"user_id"`
+	ID     *int   `json:"id"      query:"id"`
 }
 
 func createFence(c echo.Context) error {
