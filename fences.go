@@ -87,13 +87,16 @@ func createFence(c echo.Context) error {
 }
 
 func listFences(c echo.Context) error {
-	var req ListFencesRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid request payload"})
-	}
-	userID := strings.TrimSpace(req.UserID)
+	userID := strings.TrimSpace(c.QueryParam("user_id"))
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "user id is required"})
+	}
+
+	var fenceID *int
+	if idStr := c.QueryParam("id"); idStr != "" {
+		if parsed, err := strconv.Atoi(idStr); err == nil && parsed > 0 {
+			fenceID = &parsed
+		}
 	}
 
 	ctx := c.Request().Context()
@@ -101,9 +104,9 @@ func listFences(c echo.Context) error {
 		sql  string
 		args []any
 	)
-	if req.ID != nil && *req.ID > 0 {
+	if fenceID != nil {
 		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 AND id = $2 ORDER BY created_at DESC`
-		args = []any{userID, *req.ID}
+		args = []any{userID, *fenceID}
 	} else {
 		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 ORDER BY created_at DESC`
 		args = []any{userID}
