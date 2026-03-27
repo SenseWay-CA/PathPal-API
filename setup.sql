@@ -23,8 +23,12 @@ CREATE TABLE Users (
     birth_date DATE NOT NULL,
     home_long DOUBLE PRECISION NOT NULL,
     home_lat DOUBLE PRECISION NOT NULL,
+    avatar_url TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migration for existing databases:
+-- ALTER TABLE Users ADD COLUMN IF NOT EXISTS avatar_url TEXT NOT NULL DEFAULT '';
 
 
 CREATE TABLE Sessions (

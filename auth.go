@@ -22,6 +22,7 @@ type User struct {
 	BirthDate    time.Time `json:"birth_date"`
 	HomeLong     float64   `json:"home_long"`
 	HomeLat      float64   `json:"home_lat"`
+	AvatarUrl    string    `json:"avatar_url"`
 	CreatedAt    time.Time `json:"created_at"`
 	PasswordHash string    `json:"-"`
 }
@@ -49,6 +50,7 @@ type UserResponse struct {
 	BirthDate time.Time `json:"birth_date"`
 	HomeLong  float64   `json:"home_long"`
 	HomeLat   float64   `json:"home_lat"`
+	AvatarUrl string    `json:"avatar_url"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -76,13 +78,13 @@ func registerUser(c echo.Context) error {
 	sql := `
 		INSERT INTO Users (email, password_hash, name, type, birth_date, home_long, home_lat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING user_id, email, name, type, birth_date, home_long, home_lat, created_at
+		RETURNING user_id, email, name, type, birth_date, home_long, home_lat, avatar_url, created_at
 	`
 	var user UserResponse
 	err = DB.QueryRow(context.Background(), sql,
 		req.Email, string(hashedPassword), req.Name, req.Type, req.BirthDate, req.HomeLong, req.HomeLat,
 	).Scan(
-		&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.CreatedAt,
+		&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.AvatarUrl, &user.CreatedAt,
 	)
 
 	if err != nil {
@@ -102,10 +104,10 @@ func loginUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request format"})
 	}
 
-	sql := `SELECT user_id, email, password_hash, name, type, birth_date, home_long, home_lat, created_at FROM Users WHERE email = $1`
+	sql := `SELECT user_id, email, password_hash, name, type, birth_date, home_long, home_lat, avatar_url, created_at FROM Users WHERE email = $1`
 	var user User
 	err := DB.QueryRow(context.Background(), sql, req.Email).Scan(
-		&user.UserID, &user.Email, &user.PasswordHash, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.CreatedAt,
+		&user.UserID, &user.Email, &user.PasswordHash, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.AvatarUrl, &user.CreatedAt,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -147,6 +149,7 @@ func loginUser(c echo.Context) error {
 		BirthDate: user.BirthDate,
 		HomeLong:  user.HomeLong,
 		HomeLat:   user.HomeLat,
+		AvatarUrl: user.AvatarUrl,
 		CreatedAt: user.CreatedAt,
 	})
 }
@@ -183,10 +186,10 @@ func getSession(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid session"})
 	}
 
-	sql = `SELECT user_id, email, name, type, birth_date, home_long, home_lat, created_at FROM Users WHERE user_id = $1`
+	sql = `SELECT user_id, email, name, type, birth_date, home_long, home_lat, avatar_url, created_at FROM Users WHERE user_id = $1`
 	var user UserResponse
 	err = DB.QueryRow(context.Background(), sql, userID).Scan(
-		&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.CreatedAt,
+		&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate, &user.HomeLong, &user.HomeLat, &user.AvatarUrl, &user.CreatedAt,
 	)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, echo.Map{"error": "User not found"})

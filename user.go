@@ -20,8 +20,8 @@ type UserGET struct {
 	BirthDate time.Time `json:"birth_date"`
 	HomeLong  float64   `json:"home_long"`
 	HomeLat   float64   `json:"home_lat"`
+	AvatarUrl string    `json:"avatar_url"`
 	CreatedAt time.Time `json:"created_at"`
-	Password  string    `json:"password"`
 }
 type UserPUT struct {
 	UserID    string    `json:"user_id"`
@@ -31,6 +31,7 @@ type UserPUT struct {
 	BirthDate time.Time `json:"birth_date"`
 	HomeLong  float64   `json:"home_long"`
 	HomeLat   float64   `json:"home_lat"`
+	AvatarUrl string    `json:"avatar_url"`
 	Password  string    `json:"password"`
 }
 
@@ -41,7 +42,7 @@ func getUser(c echo.Context) error {
 	}
 
 	query := `
-		SELECT user_id, email, name, type, birth_date, home_long, home_lat, created_at
+		SELECT user_id, email, name, type, birth_date, home_long, home_lat, avatar_url, created_at
 		FROM users
 		WHERE user_id = $1`
 
@@ -55,6 +56,7 @@ func getUser(c echo.Context) error {
 			&user.BirthDate,
 			&user.HomeLong,
 			&user.HomeLat,
+			&user.AvatarUrl,
 			&user.CreatedAt,
 		)
 
@@ -127,47 +129,48 @@ func putUser(c echo.Context) error {
 		})
 	}
 
-	var hashedPassword []byte
+	var user UserGET
 	var err error
 
 	if req.Password != "" {
-		hashedPassword, err = bcrypt.GenerateFromPassword([]byte(req.Password), 12)
-		if err != nil {
+		// Update including new password hash
+		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
+		if hashErr != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"error": "Password hashing failed",
 			})
 		}
+		query := `
+			UPDATE users
+			SET email=$1, password_hash=$2, name=$3, type=$4, birth_date=$5,
+			    home_long=$6, home_lat=$7, avatar_url=$8
+			WHERE user_id=$9
+			RETURNING user_id, email, name, type, birth_date, home_long, home_lat, avatar_url, created_at
+		`
+		err = DB.QueryRow(context.Background(), query,
+			req.Email, string(hashedPassword), req.Name, req.Type, req.BirthDate,
+			req.HomeLong, req.HomeLat, req.AvatarUrl, req.UserID,
+		).Scan(
+			&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate,
+			&user.HomeLong, &user.HomeLat, &user.AvatarUrl, &user.CreatedAt,
+		)
+	} else {
+		// Update without touching password_hash
+		query := `
+			UPDATE users
+			SET email=$1, name=$2, type=$3, birth_date=$4,
+			    home_long=$5, home_lat=$6, avatar_url=$7
+			WHERE user_id=$8
+			RETURNING user_id, email, name, type, birth_date, home_long, home_lat, avatar_url, created_at
+		`
+		err = DB.QueryRow(context.Background(), query,
+			req.Email, req.Name, req.Type, req.BirthDate,
+			req.HomeLong, req.HomeLat, req.AvatarUrl, req.UserID,
+		).Scan(
+			&user.UserID, &user.Email, &user.Name, &user.Type, &user.BirthDate,
+			&user.HomeLong, &user.HomeLat, &user.AvatarUrl, &user.CreatedAt,
+		)
 	}
-
-	query := `
-		UPDATE users
-		SET email=$1, password=$2, name=$3, type=$4, birth_date=$5,
-		    home_long=$6, home_lat=$7
-		WHERE user_id=$8
-		RETURNING user_id, email, name, type, birth_date, home_long, home_lat, created_at
-	`
-
-	var user UserGET
-
-	err = DB.QueryRow(context.Background(), query,
-		req.Email,
-		hashedPassword,
-		req.Name,
-		req.Type,
-		req.BirthDate,
-		req.HomeLong,
-		req.HomeLat,
-		req.UserID,
-	).Scan(
-		&user.UserID,
-		&user.Email,
-		&user.Name,
-		&user.Type,
-		&user.BirthDate,
-		&user.HomeLong,
-		&user.HomeLat,
-		&user.CreatedAt,
-	)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
