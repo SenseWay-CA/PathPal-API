@@ -67,6 +67,12 @@ func main() {
 	e.GET("/status", getStatus)
 	e.POST("/status", postStatus)
 
+	// Appointment Routes
+	e.GET("/appointments", listAppointments)
+	e.POST("/appointments", createAppointment)
+	e.PUT("/appointments", updateAppointment)
+	e.DELETE("/appointments", deleteAppointment)
+
 	// Guardian Routes
 	e.POST("/guardians", createGuardian)
 	e.DELETE("/guardians", deleteGuardian)

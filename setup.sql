@@ -66,6 +66,26 @@ CREATE TABLE Fences (
     longitude DOUBLE PRECISION NOT NULL,
     latitude DOUBLE PRECISION NOT NULL,
     radius REAL NOT NULL,
+    starts_at TIMESTAMPTZ NULL,
+    ends_at TIMESTAMPTZ NULL,
+    timed_title TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Migration for existing databases:
+-- ALTER TABLE Fences ADD COLUMN IF NOT EXISTS starts_at TIMESTAMPTZ NULL;
+-- ALTER TABLE Fences ADD COLUMN IF NOT EXISTS ends_at TIMESTAMPTZ NULL;
+-- ALTER TABLE Fences ADD COLUMN IF NOT EXISTS timed_title TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE Appointments (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    location TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    start_at TIMESTAMPTZ NOT NULL,
+    end_at TIMESTAMPTZ NULL,
+    fence_id INTEGER NULL REFERENCES Fences(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -97,6 +117,9 @@ CREATE INDEX idx_events_type ON Events(type);
 CREATE INDEX idx_events_created_at ON Events(created_at DESC);
 
 CREATE INDEX idx_fences_user_id ON Fences(user_id);
+
+CREATE INDEX idx_appointments_user_id ON Appointments(user_id);
+CREATE INDEX idx_appointments_start_at ON Appointments(start_at ASC);
 
 CREATE INDEX idx_invites_user_id ON Invites(user_id);
 CREATE INDEX idx_invites_email ON Invites(email);

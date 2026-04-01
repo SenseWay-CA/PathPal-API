@@ -12,33 +12,43 @@ import (
 )
 
 type Fence struct {
-	FenceID   int       `json:"id"`
-	UserID    string    `json:"user_id"`
-	Name      string    `json:"name"`
-	Enabled   bool      `json:"enabled"`
-	Longitude float64   `json:"longitude"`
-	Latitude  float64   `json:"latitude"`
-	Radius    float32   `json:"radius"`
-	CreatedAt time.Time `json:"created_at"`
+	FenceID    int        `json:"id"`
+	UserID     string     `json:"user_id"`
+	Name       string     `json:"name"`
+	Enabled    bool       `json:"enabled"`
+	Longitude  float64    `json:"longitude"`
+	Latitude   float64    `json:"latitude"`
+	Radius     float32    `json:"radius"`
+	StartsAt   *time.Time `json:"starts_at"`
+	EndsAt     *time.Time `json:"ends_at"`
+	TimedTitle string     `json:"timed_title"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 type CreateFenceRequest struct {
-	UserID    string  `json:"user_id"`
-	Name      string  `json:"name"`
-	Enabled   *bool   `json:"enabled"`
-	Longitude float64 `json:"longitude"`
-	Latitude  float64 `json:"latitude"`
-	Radius    float32 `json:"radius"`
+	UserID     string     `json:"user_id"`
+	Name       string     `json:"name"`
+	Enabled    *bool      `json:"enabled"`
+	Longitude  float64    `json:"longitude"`
+	Latitude   float64    `json:"latitude"`
+	Radius     float32    `json:"radius"`
+	StartsAt   *time.Time `json:"starts_at"`
+	EndsAt     *time.Time `json:"ends_at"`
+	TimedTitle string     `json:"timed_title"`
 }
 
 type UpdateFenceRequest struct {
-	ID        *int     `json:"id"`
-	UserID    string   `json:"user_id"`
-	Name      *string  `json:"name"`
-	Enabled   *bool    `json:"enabled"`
-	Longitude *float64 `json:"longitude"`
-	Latitude  *float64 `json:"latitude"`
-	Radius    *float32 `json:"radius"`
+	ID         *int       `json:"id"`
+	UserID     string     `json:"user_id"`
+	Name       *string    `json:"name"`
+	Enabled    *bool      `json:"enabled"`
+	Longitude  *float64   `json:"longitude"`
+	Latitude   *float64   `json:"latitude"`
+	Radius     *float32   `json:"radius"`
+	SetTimed   bool       `json:"set_timed"`
+	StartsAt   *time.Time `json:"starts_at"`
+	EndsAt     *time.Time `json:"ends_at"`
+	TimedTitle *string    `json:"timed_title"`
 }
 
 type ListFencesRequest struct {
@@ -63,13 +73,13 @@ func createFence(c echo.Context) error {
 
 	ctx := c.Request().Context()
 	sql := `
-		INSERT INTO Fences (user_id, name, enabled, longitude, latitude, radius)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, user_id, name, enabled, longitude, latitude, radius, created_at
+		INSERT INTO Fences (user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title, created_at
 	`
 
 	var fence Fence
-	err := DB.QueryRow(ctx, sql, req.UserID, req.Name, enabled, req.Longitude, req.Latitude, req.Radius).Scan(
+	err := DB.QueryRow(ctx, sql, req.UserID, req.Name, enabled, req.Longitude, req.Latitude, req.Radius, req.StartsAt, req.EndsAt, req.TimedTitle).Scan(
 		&fence.FenceID,
 		&fence.UserID,
 		&fence.Name,
@@ -77,6 +87,9 @@ func createFence(c echo.Context) error {
 		&fence.Longitude,
 		&fence.Latitude,
 		&fence.Radius,
+		&fence.StartsAt,
+		&fence.EndsAt,
+		&fence.TimedTitle,
 		&fence.CreatedAt,
 	)
 	if err != nil {
@@ -105,10 +118,10 @@ func listFences(c echo.Context) error {
 		args []any
 	)
 	if fenceID != nil {
-		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 AND id = $2 ORDER BY created_at DESC`
+		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title, created_at FROM Fences WHERE user_id = $1 AND id = $2 ORDER BY created_at DESC`
 		args = []any{userID, *fenceID}
 	} else {
-		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 ORDER BY created_at DESC`
+		sql = `SELECT id, user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title, created_at FROM Fences WHERE user_id = $1 ORDER BY created_at DESC`
 		args = []any{userID}
 	}
 
@@ -121,7 +134,7 @@ func listFences(c echo.Context) error {
 	var fences []Fence
 	for rows.Next() {
 		var f Fence
-		if err := rows.Scan(&f.FenceID, &f.UserID, &f.Name, &f.Enabled, &f.Longitude, &f.Latitude, &f.Radius, &f.CreatedAt); err != nil {
+		if err := rows.Scan(&f.FenceID, &f.UserID, &f.Name, &f.Enabled, &f.Longitude, &f.Latitude, &f.Radius, &f.StartsAt, &f.EndsAt, &f.TimedTitle, &f.CreatedAt); err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "failed to parse fence data"})
 		}
 		fences = append(fences, f)
@@ -155,7 +168,7 @@ func updateFence(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	selectSQL := `SELECT id, user_id, name, enabled, longitude, latitude, radius, created_at FROM Fences WHERE user_id = $1 AND id = $2`
+	selectSQL := `SELECT id, user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title, created_at FROM Fences WHERE user_id = $1 AND id = $2`
 
 	var current Fence
 	var err error
@@ -167,6 +180,9 @@ func updateFence(c echo.Context) error {
 		&current.Longitude,
 		&current.Latitude,
 		&current.Radius,
+		&current.StartsAt,
+		&current.EndsAt,
+		&current.TimedTitle,
 		&current.CreatedAt,
 	)
 	if err == pgx.ErrNoRows {
@@ -190,12 +206,21 @@ func updateFence(c echo.Context) error {
 	if req.Radius != nil {
 		current.Radius = *req.Radius
 	}
+	// only update timed fields when the client explicitly signals it
+	if req.SetTimed {
+		current.StartsAt = req.StartsAt
+		current.EndsAt = req.EndsAt
+		if req.TimedTitle != nil {
+			current.TimedTitle = *req.TimedTitle
+		}
+	}
 
 	updateSQL := `
 		UPDATE Fences
-		SET name = $1, enabled = $2, longitude = $3, latitude = $4, radius = $5
-		WHERE user_id = $6 AND id = $7
-		RETURNING id, user_id, name, enabled, longitude, latitude, radius, created_at
+		SET name = $1, enabled = $2, longitude = $3, latitude = $4, radius = $5,
+		    starts_at = $6, ends_at = $7, timed_title = $8
+		WHERE user_id = $9 AND id = $10
+		RETURNING id, user_id, name, enabled, longitude, latitude, radius, starts_at, ends_at, timed_title, created_at
 	`
 
 	err = DB.QueryRow(ctx, updateSQL,
@@ -204,6 +229,9 @@ func updateFence(c echo.Context) error {
 		current.Longitude,
 		current.Latitude,
 		current.Radius,
+		current.StartsAt,
+		current.EndsAt,
+		current.TimedTitle,
 		userID,
 		fenceID,
 	).Scan(
@@ -214,6 +242,9 @@ func updateFence(c echo.Context) error {
 		&current.Longitude,
 		&current.Latitude,
 		&current.Radius,
+		&current.StartsAt,
+		&current.EndsAt,
+		&current.TimedTitle,
 		&current.CreatedAt,
 	)
 	if err == pgx.ErrNoRows {
