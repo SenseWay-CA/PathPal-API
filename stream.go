@@ -266,8 +266,9 @@ func runFFmpeg() error {
 
 	cmd := exec.Command("ffmpeg",
 		"-loglevel", "error",
-		"-fflags", "nobuffer",
+		"-fflags", "nobuffer+discardcorrupt",
 		"-flags", "low_delay",
+		"-err_detect", "ignore_err",
 		"-i", addr,
 		"-vf", "fps="+fps+",scale=640:480",
 		"-f", "image2pipe",
