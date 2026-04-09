@@ -14,6 +14,9 @@ func main() {
 	}
 	defer DB.Close()
 
+	go hubRun()    // manages WebSocket client list + frame broadcast
+	go StartStream() // pulls Pi UDP stream via FFmpeg, pushes JPEG frames
+
 	e := echo.New()
 
 	e.Use(middleware.Logger())
@@ -78,6 +81,10 @@ func main() {
 	e.DELETE("/guardians", deleteGuardian)
 	e.GET("/caregivers", getCaregivers)
 	e.GET("/caneusers", getCaneUsers)
+
+	// Camera Stream Routes
+	e.GET("/ws/stream", streamWSHandler)       // WebSocket — clients subscribe here
+	e.GET("/stream/status", streamStatusHandler) // REST — check if Pi is live
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

@@ -8,10 +8,14 @@ services:
     restart: always
     ports:
       - "1323:1323"
+      - "8554:8554/udp"       # Pi streams MPEGTS H264 to this port
     depends_on:
       - db
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - STREAM_UDP_ADDR=udp://0.0.0.0:8554
+      - STREAM_FPS=15
+      - STREAM_QUALITY=5
     networks:
       - pathpal-net
 
